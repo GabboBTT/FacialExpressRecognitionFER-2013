@@ -15,9 +15,6 @@ def build_mini_xception(input_shape=(48, 48, 1), num_classes=7):
     inputs = layers.Input(shape=input_shape)
     x = data_augmentation(inputs)
 
-    # Normalizzazione interna (0-255 -> 0-1)
-    x = layers.Rescaling(1./255)(x)
-
     # Blocco 1
     x = layers.Conv2D(32, (3, 3), strides=(1, 1), padding='same', use_bias=False)(x)
     x = layers.BatchNormalization()(x)

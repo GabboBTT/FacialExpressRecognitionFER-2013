@@ -12,7 +12,6 @@ TRAIN_DIR = '../dataset/train'
 VAL_DIR = '../dataset/test'
 
 def get_class_weights(dataset_dir):
-    """Calcola i pesi bilanciati per contrastare lo sbilanciamento di FER-2013."""
     classes = sorted(os.listdir(dataset_dir))
     y = []
     for i, cls_name in enumerate(classes):
@@ -27,13 +26,8 @@ def get_class_weights(dataset_dir):
     return dict(enumerate(class_weights))
 
 def run_training():
-    print("🚀 Inizializzazione Training su FER-2013...")
+    print("🚀 Inizializzazione Training Definitivo su FER-2013...")
     
-    # 1. Caricamento Dati Reali
-    if not os.path.exists(TRAIN_DIR):
-        print(f"❌ ERRORE: Cartella {TRAIN_DIR} non trovata. Assicurati di aver scaricato il dataset.")
-        return
-
     train_ds = tf.keras.utils.image_dataset_from_directory(
         TRAIN_DIR, color_mode='grayscale', image_size=IMG_SIZE, 
         batch_size=BATCH_SIZE, label_mode='categorical'
@@ -43,43 +37,39 @@ def run_training():
         batch_size=BATCH_SIZE, label_mode='categorical'
     )
     
-    num_classes = len(train_ds.class_names)
+    # Manteniamo i dati tra 0 e 255. La rete li gestirà tramite la Batch Normalization
     
-    # Ottimizzazione I/O
+    num_classes = len(train_ds.class_names)
     AUTOTUNE = tf.data.AUTOTUNE
     train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
     val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
     
-    # 2. Mitigazione Bias: Class Weights
     weights = get_class_weights(TRAIN_DIR)
-    print(f"⚖️ Pesi di classe bilanciati calcolati: {weights}")
+    print(f"⚖️ Pesi bilanciati: {weights}")
     
-    # 3. Costruzione e Compilazione
     model = build_mini_xception(input_shape=(48, 48, 1), num_classes=num_classes)
-    loss_fn = tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1) # Mitigazione Label Rumorose
-    model.compile(optimizer='adam', loss=loss_fn, metrics=['accuracy'])
+    loss_fn = tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1)
     
-    # 4. Callbacks: Salva il tuo lavoro e proteggi la quota Colab
+    # OTTIMIZZAZIONE CHIAVE: Usiamo Nadam che è più reattivo di Adam su questi dataset
+    model.compile(optimizer=tf.keras.optimizers.Nadam(learning_rate=0.002), loss=loss_fn, metrics=['accuracy'])
+    
     os.makedirs('../models', exist_ok=True)
+    
+    # CALLBACKS AGGIORNATI
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(
-            monitor='val_accuracy', patience=7, restore_best_weights=True, verbose=1
-        ),
-        tf.keras.callbacks.ModelCheckpoint(
-            filepath='../models/mini_xception_best.h5', monitor='val_accuracy', 
-            save_best_only=True, verbose=1
-        )
+        tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=12, restore_best_weights=True, verbose=1),
+        tf.keras.callbacks.ModelCheckpoint(filepath='../models/mini_xception_best.h5', monitor='val_accuracy', save_best_only=True, verbose=1),
+        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=5, min_lr=1e-5, verbose=1) # Nuova arma
     ]
     
-    # 5. Training
     history = model.fit(
         train_ds,
         validation_data=val_ds,
         epochs=EPOCHS,
-        class_weight=weights,
+        class_weight=weights, # Applichiamo i pesi
         callbacks=callbacks
     )
-    print("✅ Addestramento completato e pesi migliori salvati.")
+    print("✅ Addestramento completato.")
 
 if __name__ == "__main__":
     run_training()
