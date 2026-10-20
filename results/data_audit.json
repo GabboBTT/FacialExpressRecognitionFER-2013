@@ -1,0 +1,54 @@
+{
+  "raw_sizes": {
+    "train": 28709,
+    "val_public": 3589,
+    "test_private": 3589
+  },
+  "duplicate_groups_all_splits": 1516,
+  "identical_images_with_conflicting_labels": 57,
+  "train_removed_overlap_val_or_test": 703,
+  "val_removed_overlap_test": 46,
+  "near_blank_images_std_lt_5": 14,
+  "clean_sizes": {
+    "train": 28006,
+    "val": 3543,
+    "test": 3589
+  },
+  "class_counts": {
+    "angry": {
+      "train": 3879,
+      "val": 461,
+      "test": 491
+    },
+    "disgust": {
+      "train": 389,
+      "val": 55,
+      "test": 55
+    },
+    "fear": {
+      "train": 3988,
+      "val": 494,
+      "test": 528
+    },
+    "happy": {
+      "train": 7157,
+      "val": 890,
+      "test": 879
+    },
+    "neutral": {
+      "train": 4917,
+      "val": 601,
+      "test": 626
+    },
+    "sad": {
+      "train": 4780,
+      "val": 650,
+      "test": 594
+    },
+    "surprise": {
+      "train": 2896,
+      "val": 392,
+      "test": 416
+    }
+  }
+}

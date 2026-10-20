@@ -1,20 +1,39 @@
-# 🎭 Facial Expression Recognition (FER-2013)
+# Facial Expression Recognition su FER-2013
 
-**Author:** Gabriel Betti (Matricola: 178267)
+**Gabriel Betti — Matricola 178267** · Progetto di Computer Vision
 
-## 📌 Project Overview
-Questo progetto implementa e confronta diverse pipeline di Machine Learning e Deep Learning per la classificazione di espressioni facciali (7 emozioni) sul dataset FER-2013, come richiesto dalle specifiche di esame. L'obiettivo principale è analizzare criticamente le performance, i *failure modes* e il *dataset bias* in condizioni di bassa risoluzione (48x48) e *noisy labels*.
+Confronto tra una pipeline classica (**HOG + LinearSVC**) e reti convoluzionali (**ResNet-Lite** addestrata da zero, **MobileNetV2** in transfer learning) per il riconoscimento di 7 espressioni facciali su FER-2013, con analisi dei failure modes e dei bias sui sottogruppi.
 
-## 🎯 Objectives & Mitigations
-*   **Benchmark:** Confronto tra estrattori classici (HOG + SVM) e architetture Deep CNN.
-*   **Bias Analysis:** Analisi delle discrepanze di performance causate dalle condizioni di illuminazione (Subgroup bias: Dark vs Bright images).
-*   **Mitigation Strategies:** Implementazione di *Label Smoothing*, *Balanced Class Weights* e *Data Augmentation* dinamica per contrastare l'overfitting e lo sbilanciamento delle classi (es. *Fear* e *Disgust*).
+## Risultati (test set, PrivateTest — 3 589 immagini)
 
-## 🚀 Models & Results (Validation Accuracy)
-1.  **Custom CNN V2 (Scratch + Augmentation):** `56.23%` - Modello primario ottimizzato.
-2.  **MobileNetV2 (Transfer Learning + Fine-Tuning):** `56.28%` - Bonus Sprint per testare i limiti teorici del dataset.
-3.  **HOG + LinearSVC:** `41.00%` - Pipeline classica, eccellente nella *Recall* della classe minoritaria *Disgust* (63%).
+| Modello | Accuracy [IC 95%] | Macro-F1 |
+|---|---|---|
+| HOG + LinearSVC | 40.6% [39.1, 42.2] | 0.349 |
+| MobileNetV2 (transfer learning) | 63.2% [61.6, 64.8] | 0.609 |
+| ResNet-Lite, senza mitigazioni | 66.7% [65.3, 68.1] | 0.636 |
+| **ResNet-Lite + label smoothing + balanced sampling** (3 seed) | **67.3% ± 0.2** | **0.657** |
 
-## 📂 Repository Structure
-*   `/src/` - Contiene gli script di training isolati e le pipeline (CNN, SVM, Bias Analysis).
-*   `Report_FER2013_178267_Gold.md` - Documentazione scientifica completa, analisi delle metriche e discussione architetturale.
+- La CNN supera nettamente HOG + SVM (McNemar, p < 10⁻¹⁵⁰) e MobileNetV2 (p ≈ 2·10⁻⁷).
+- Label smoothing e campionamento bilanciato non cambiano in modo significativo l'accuratezza (p = 0.35), ma migliorano macro-F1 e recall delle classi rare.
+- Le confusioni principali sono *Fear → Sad*, *Sad ↔ Neutral*, *Angry → Sad*; parte degli errori è dovuta al rumore delle etichette di FER-2013.
+- Nessun bias statisticamente significativo per luminosità, contrasto o nitidezza; le immagini più scure mostrano un calo non significativo (p = 0.085).
+
+## Protocollo
+- Split ufficiale ICML 2013: `Training` → addestramento, `PublicTest` → validation (scelta del modello), `PrivateTest` → test (usato una sola volta).
+- Rimosse dal training 703 immagini identiche a immagini di validation o test.
+- Selezione dei modelli sulla macro-F1 di validation; intervalli di confidenza bootstrap e test di McNemar sul test.
+- Seed fissi e operazioni deterministiche (TensorFlow 2.21, Keras 3.13, GPU T4).
+
+## Struttura
+
+| Percorso | Contenuto |
+|---|---|
+| `FER2013_Betti_178267.ipynb` | Notebook completo: dati, modelli, valutazione, failure modes, bias |
+| `Report_FER2013_Betti_178267.pdf` | Report scientifico |
+| `report/` | Sorgenti LaTeX del report (`main.tex`, `references.bib`, `figures/`) |
+| `results/` | Metriche esportate dal notebook (`results.json`), audit del dataset, ambiente di esecuzione |
+
+## Esecuzione
+1. Aprire il notebook in Google Colab con runtime **GPU T4**.
+2. Aggiungere ai segreti di Colab `KAGGLE_USERNAME` e `KAGGLE_KEY`: il dataset ([msambare/fer2013](https://www.kaggle.com/datasets/msambare/fer2013)) viene scaricato automaticamente.
+3. *Runtime → Esegui tutte* (circa 3 ore di GPU). Risultati, pesi e figure vengono salvati su Google Drive in `FER2013_178267/`; gli esperimenti già completati vengono ricaricati, quindi l'esecuzione può essere divisa in più sessioni.

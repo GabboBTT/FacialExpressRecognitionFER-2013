@@ -1,4 +1,17 @@
 __pycache__/
 *.pyc
-data/
 .ipynb_checkpoints/
+
+# Dataset (downloaded from Kaggle by the notebook) and training artifacts
+dataset/
+data/
+outputs/
+outputs_smoke/
+outputs_colab/
+*.zip
+*.weights.h5
+
+# Local notes and superseded material
+Staff/
+src/
+report/domande_orale.md
