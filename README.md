@@ -11,7 +11,7 @@ Confronto tra una pipeline classica (**HOG + LinearSVC**) e reti convoluzionali 
 | HOG + LinearSVC | 40.6% [39.1, 42.2] | 0.349 |
 | MobileNetV2 (transfer learning) | 63.2% [61.6, 64.8] | 0.609 |
 | ResNet-Lite, senza mitigazioni | 66.7% [65.3, 68.1] | 0.636 |
-| **ResNet-Lite + label smoothing + balanced sampling** (3 seed) | **67.3% ± 0.2** | **0.657** |
+| **ResNet-Lite + label smoothing + balanced sampling** (3 seed) | **67.3% ± 0.2** | **0.656** |
 
 - La CNN supera nettamente HOG + SVM (McNemar, p < 10⁻¹⁵⁰) e MobileNetV2 (p ≈ 2·10⁻⁷).
 - Label smoothing e campionamento bilanciato non cambiano in modo significativo l'accuratezza (p = 0.35), ma migliorano macro-F1 e recall delle classi rare.
